@@ -1,0 +1,21 @@
+.post-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    background-color: #fff;
+}
+.post-card .post-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.post-card .post-header .creator {
+    font-weight: 600;
+}
+.post-card .post-header .visibility {
+    font-size: 0.9rem;
+    color: #666;
+}

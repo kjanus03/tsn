@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>All Users</h1>
+  {% if users %}
+    <ul class="list-group">
+      {% for user in users %}
+        <li class="list-group-item">
+          <a href="{{ url_for('profile.view_profile', username=user.username) }}">
+            {{ user.username }}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No users found.</p>
+  {% endif %}
+{% endblock %}

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_user import login_required
 
-bp = Blueprint('routes', __name__)
+bp = Blueprint('routes', __name__, template_folder='templates')
 
 @bp.route('/')
 def index():
