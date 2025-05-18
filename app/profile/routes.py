@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from flask_user import current_user, login_required
+from flask_login import current_user, login_required
 from app import db
 from app.models import User
 from app.profile.forms import EditProfileForm  # Create a WTForm for profile editing

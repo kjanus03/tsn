@@ -1,9 +1,10 @@
 # app/main/routes.py
 from flask import Blueprint, render_template, request, redirect, url_for
-from flask_user import login_required, current_user
+# from flask_security import Security, SQLAlchemyUserDatastore, UserMixin, RoleMixin
+from flask_login import LoginManager, login_user, logout_user, current_user, login_required
 
-from app.models import Post, VisibilityEnum
-from app import db
+from ..models import Post, VisibilityEnum
+from .. import db
 
 bp = Blueprint('main', __name__, template_folder='templates')
 
