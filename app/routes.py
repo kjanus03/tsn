@@ -1,9 +1,9 @@
 from flask import Blueprint, jsonify
 from flask_security import login_required # New import from Flask-Security
 
-bp = Blueprint('some_blueprint_name', __name__) # e.g., 'main_bp' in __init__.py
+bp = Blueprint('routes', __name__, template_folder='templates')
 
-@bp.route('/') # This will be relative to the blueprint's url_prefix
+@bp.route('/')
 def index():
     return "Welcome to the TSN Platform!"
 
@@ -13,6 +13,6 @@ def get_users():
     return jsonify({"msg": "List of users"})
 
 @bp.route('/dashboard')
-@login_required # This should now work with Flask-Security
+@login_required
 def dashboard():
     return "User Dashboard"
