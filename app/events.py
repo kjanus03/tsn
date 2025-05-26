@@ -1,9 +1,6 @@
-from flask import Blueprint, jsonify
-from flask_user import login_required
 from flask import request
 from flask_socketio import emit
 from .extensions import socketio
-
 
 users={}
 
@@ -25,19 +22,3 @@ def handle_new_message(message):
             username=user
     emit("chat", {"message":message, "username":username}, broadcast=True)
     
-
-bp = Blueprint('routes', __name__)
-
-@bp.route('/')
-def index():
-    return "Welcome to the TSN Platform!"
-
-@bp.route('/users', methods=['GET'])
-def get_users():
-    # Logic to fetch and return users from PostgreSQL
-    return jsonify({"msg": "List of users"})
-
-@bp.route('/dashboard')
-@login_required
-def dashboard():
-    return "User Dashboard"
