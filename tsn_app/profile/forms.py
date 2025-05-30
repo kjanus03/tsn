@@ -1,10 +1,10 @@
-# app/auth/forms.py (or app/profile/forms.py)
+# tsn_app/auth/forms.py (or tsn_app/profile/forms.py)
 from flask_wtf import FlaskForm # Base form
 from flask_wtf.file import FileField, FileAllowed # For file uploads
 from wtforms import StringField, DateField, SelectField, SubmitField, TextAreaField
 from wtforms.validators import DataRequired, Length, Optional, Email, ValidationError
 from ..models import User # needed for custom validation, e.g., unique phone
-from ..models import GenderEnum # Assuming GenderEnum is in app/enums.py
+from ..models import GenderEnum # Assuming GenderEnum is in tsn_app/enums.py
 from flask_login import current_user # To pre-fill or validate against current user
 
 # Helper for allowed image extensions

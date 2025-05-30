@@ -22,8 +22,8 @@ def save_picture(form_picture):
 
     picture_fn = random_hex + f_ext
     # Create path relative to the 'static' folder.
-    # Files should be saved within app.static_folder + '/images/profile_pics/'
-    # app.static_folder is an absolute path. We need to join it.
+    # Files should be saved within tsn_app.static_folder + '/images/profile_pics/'
+    # tsn_app.static_folder is an absolute path. We need to join it.
     picture_path = os.path.join(current_app.static_folder, 'images', 'profile_pics', picture_fn)
 
     # Ensure the profile_pics directory exists

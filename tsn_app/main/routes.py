@@ -1,4 +1,4 @@
-# app/main/routes.py
+# tsn_app/main/routes.py
 import secrets
 import uuid
 from datetime import datetime, date
@@ -269,7 +269,7 @@ def google_oauth_error(blueprint, error, error_description=None, error_uri=None)
     current_app.logger.error(f"OAuth error from {blueprint.name}: {error} desc: {error_description} uri: {error_uri}")
     return redirect(url_for("security.login"))
 
-# You need to make sure these signal handlers are connected when the app is created.
-# If this code is in app/__init__.py, it should be fine.
-# If it's in a separate file (e.g., app/oauth_handlers.py), import that file in app/__init__.py
+# You need to make sure these signal handlers are connected when the tsn_app is created.
+# If this code is in tsn_app/__init__.py, it should be fine.
+# If it's in a separate file (e.g., tsn_app/oauth_handlers.py), import that file in tsn_app/__init__.py
 # so the @oauth_authorized.connect decorator runs.

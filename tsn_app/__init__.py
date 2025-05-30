@@ -1,30 +1,34 @@
-# tsn/app/__init__.py
+# tsn/tsn_app/__init__.py
 import os
 from flask import Flask, template_rendered, request
 from flask_security import SQLAlchemyUserDatastore
-from .extensions import db, migrate, socketio, security # security is an empty Security() instance
+from .extensions import db, migrate, socketio, security  # security is an empty Security() instance
 from .config import Config
+from .utils.graph_sync import init_neo4j
 
 # ---> IMPORT YOUR CUSTOM FORM CLASS DIRECTLY <---
-from .auth.forms import ExtendedRegisterForm # Path: app/security/forms.py
+from .auth.forms import ExtendedRegisterForm  # Path: tsn_app/security/forms.py
 from flask_dance.contrib.google import make_google_blueprint
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 
 def create_app(config_class=Config):
     project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     template_dir = os.path.join(project_root, 'templates')
     static_dir = os.path.join(project_root, 'static')
 
-    app = Flask(__name__,
-                template_folder=template_dir,
-                static_folder=static_dir)
-    app.config.from_object(config_class) # Loads SECURITY_REGISTER_TEMPLATE, etc.
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+    app.config.from_object(config_class)  # Loads SECURITY_REGISTER_TEMPLATE, etc.
 
+    init_neo4j(app)  # Initialize Neo4j connection for ththe graph database
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     socketio.init_app(app)
+
+    # Register our SQLAlchemy event listeners
+    import tsn_app.utils.graph_listeners  # noqa: F401
 
     # --- SIGNAL HANDLER ---
     @template_rendered.connect_via(app)
@@ -43,8 +47,8 @@ def create_app(config_class=Config):
     # --- END SIGNAL HANDLER ---
 
     # --- THIS IS THE MOST IMPORTANT PART FOR CUSTOM FORM ---
-    # Explicitly set the FORM CLASS OBJECT in app.config
-    app.config['SECURITY_REGISTER_FORM'] = ExtendedRegisterForm # Assign the imported class
+    # Explicitly set the FORM CLASS OBJECT in tsn_app.config
+    app.config['SECURITY_REGISTER_FORM'] = ExtendedRegisterForm  # Assign the imported class
     # -------------------------------------------------------
 
     # Add a debug print IMMEDIATELY AFTER loading config
@@ -56,7 +60,7 @@ def create_app(config_class=Config):
 
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 
-    # Initialize Flask-Security. It will now read SECURITY_REGISTER_FORM from app.config
+    # Initialize Flask-Security. It will now read SECURITY_REGISTER_FORM from tsn_app.config
     # and should see your ExtendedRegisterForm class object.
     security.init_app(app, user_datastore)
 
@@ -67,19 +71,17 @@ def create_app(config_class=Config):
         f"2. app.config['SECURITY_REGISTER_FORM'] (class object from app.config): {app.config.get('SECURITY_REGISTER_FORM')}")
 
     # ---- Flask-Dance Google Blueprint Setup ----
-    google_bp = make_google_blueprint(
-        client_id=app.config["GOOGLE_OAUTH_CLIENT_ID"],
+    google_bp = make_google_blueprint(client_id=app.config["GOOGLE_OAUTH_CLIENT_ID"],
         client_secret=app.config["GOOGLE_OAUTH_CLIENT_SECRET"],
         # Scopes define what information you're asking Google for
-        scope=[
-            "openid",  # Standard for OpenID Connect
+        scope=["openid",  # Standard for OpenID Connect
             "https://www.googleapis.com/auth/userinfo.email",  # For email
             "https://www.googleapis.com/auth/userinfo.profile",  # For name, profile pic
             "https://www.googleapis.com/auth/user.birthday.read",  # For birthday
             "https://www.googleapis.com/auth/user.gender.read",  # For gender (check current availability)
-            "https://www.googleapis.com/auth/user.phonenumbers.read" # For phone (requires People API enabled & verification)
-        ],
-        # This is where Google redirects AFTER successful auth.
+            "https://www.googleapis.com/auth/user.phonenumbers.read"
+            # For phone (requires People API enabled & verification)
+        ], # This is where Google redirects AFTER successful auth.
         # redirect_to="auth.handle_google_auth", # 'auth' is your blueprint, 'handle_google_auth' is your route
     )
     app.register_blueprint(google_bp, url_prefix="/login")  # Makes routes like /login/google
