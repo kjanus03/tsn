@@ -10,3 +10,4 @@ app/main/__pycache__/routes.cpython-312.pyc
 *.pyc
 *.pyc
 venv/
+*.tmp
