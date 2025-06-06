@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <h1 class="card-title">{{ event.title }}</h1>
+                {% if event.can_edit(current_user) %}
+                <a href="{{ url_for('event.edit', event_id=event.id) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Edit Event
+                </a>
+                {% endif %}
+            </div>
+            
+            <div class="mb-4">
+                <p class="card-text">{{ event.description }}</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Event Details</h5>
+                    <div class="mb-2">
+                        <i class="fas fa-calendar"></i> {{ event.event_datetime.strftime('%B %d, %Y at %I:%M %p') }}
+                    </div>
+                    {% if event.location %}
+                    <div class="mb-2">
+                        <i class="fas fa-map-marker-alt"></i> {{ event.location }}
+                    </div>
+                    {% endif %}
+                    <div class="mb-2">
+                        <i class="fas fa-users"></i> {{ event.rsvps.count() }} attending
+                        {% if event.max_participants %}
+                        (max: {{ event.max_participants }})
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>Organizer</h5>
+                    <div class="mb-2">
+                        <i class="fas fa-user"></i> {{ event.creator.username }}
+                    </div>
+                    {% if event.collaborators.count() > 0 %}
+                    <div class="mb-2">
+                        <i class="fas fa-user-friends"></i> Collaborators:
+                        {% for collaborator in event.collaborators %}
+                        <span class="badge bg-secondary">{{ collaborator.username }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h5>Attendees</h5>
+                {% if event.rsvps.count() > 0 %}
+                <div class="row">
+                    {% for rsvp in event.rsvps %}
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex align-items-center">
+                            <img src="{{ rsvp.user.profile_pic }}" class="rounded-circle me-2" width="32" height="32">
+                            <span>{{ rsvp.user.username }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No attendees yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="d-flex gap-2">
+                {% if current_user in event.rsvps %}
+                <form action="{{ url_for('event.unrsvp', event_id=event.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="fas fa-times"></i> Cancel RSVP
+                    </button>
+                </form>
+                {% else %}
+                <form action="{{ url_for('event.rsvp', event_id=event.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary" 
+                            {% if event.max_participants and event.rsvps.count() >= event.max_participants %}
+                            disabled
+                            {% endif %}>
+                        <i class="fas fa-check"></i> RSVP
+                    </button>
+                </form>
+                {% endif %}
+
+                {% if event.can_edit(current_user) %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="addCollaboratorDropdown" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-plus"></i> Add Collaborator
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="addCollaboratorDropdown">
+                        {% for friend in current_user.friends %}
+                        {% if friend not in event.collaborators and friend != event.creator %}
+                        <li>
+                            <form action="{{ url_for('event.add_collaborator', event_id=event.id, user_id=friend.id) }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="dropdown-item">{{ friend.username }}</button>
+                            </form>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

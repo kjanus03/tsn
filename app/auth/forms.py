@@ -1,8 +1,9 @@
 # app/forms.py
 from flask_security.forms import RegisterForm, StringField,BooleanField, PasswordField # Import base fields
-from wtforms import DateField, SelectField # For Date and Enum
-from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, Optional
-from ..models import GenderEnum # Assuming GenderEnum is in models.py
+from wtforms import DateField, SelectField, SubmitField # For Date and Enum
+from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp, Optional, ValidationError
+from ..models import GenderEnum, User
+from flask_wtf import FlaskForm
 
 
 class ExtendedRegisterForm(RegisterForm): # Inherit from flask_security's RegisterForm
@@ -59,3 +60,12 @@ class ExtendedRegisterForm(RegisterForm): # Inherit from flask_security's Regist
     # Note: 'profile_pic' is usually handled by a separate profile edit form after registration,
     # as file uploads on a registration form can be complex.
     # 'active' and 'fs_uniquifier' are typically handled by Flask-Security internally, not form fields.
+
+class ResetPasswordRequestForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Request Password Reset')
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Reset Password')

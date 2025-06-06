@@ -15,7 +15,7 @@ from dateutil.parser import parse as parse_date
 from werkzeug.utils import secure_filename
 from ..events import send_notification
 from .forms import PostForm, EditPostForm, CommentForm
-from ..models import Post, VisibilityEnum, Like, User, GenderEnum, Comment, Share, Message, Notification
+from ..models import Post, VisibilityEnum, Like, User, GenderEnum, Comment, Share, Message, Notification, roles_users
 from .. import db, security
 
 bp = Blueprint('main', __name__,
@@ -38,7 +38,12 @@ def users():
     page = request.args.get('page', 1, type=int)  # For pagination later
     search_query = request.args.get('q', '').strip()  # Get search query, default to empty string
 
-    query = User.query.filter(User.id != current_user.id)  # Exclude current user
+    # Exclude current user and admin users, but include users without roles
+    admin_ids = db.session.query(roles_users.c.user_id).filter(roles_users.c.role_id == 2).subquery()
+    query = User.query.filter(
+        User.id != current_user.id,
+        ~User.id.in_(admin_ids)
+    )
 
     if search_query:
         # Simple search: username, first name, last name, email (be careful with email privacy)

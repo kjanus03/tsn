@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="margin-bottom: 1rem !important;">
+    <h1 class="text-center mb-4">Statistics Dashboard</h1>
+
+    <!-- Engagement Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #09619f; color: white;">
+                    <h5 class="mb-0" style="color: white;">Posts per User</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-text" style="color: #143454;">{{ "%.2f"|format(avg_posts_per_user) }}</h2>
+                    <p class="text-muted">Average posts created by each user</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #f0a200; color: white;">
+                    <h5 class="mb-0" style="color: white;">Likes per Post</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-text" style="color: #143454;">{{ "%.2f"|format(avg_likes_per_post) }}</h2>
+                    <p class="text-muted">Average likes received per post</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #143454; color: white;">
+                    <h5 class="mb-0" style="color: white;">Shares per Post</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-text" style="color: #143454;">{{ "%.2f"|format(avg_shares_per_post) }}</h2>
+                    <p class="text-muted">Average shares per post</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-header" style="background-color: #09619f; color: white;">
+                    <h5 class="mb-0" style="color: white;">Comments per Post</h5>
+                </div>
+                <div class="card-body text-center">
+                    <h2 class="card-text" style="color: #143454;">{{ "%.2f"|format(avg_comments_per_post) }}</h2>
+                    <p class="text-muted">Average comments per post</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="row mb-4">
+        <!-- Daily Posts Chart -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #143454; color: white;">
+                    <h5 class="mb-0" style="color: white;">Daily Post Activity (Last 30 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="postsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gender Distribution Chart -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #09619f; color: white;">
+                    <h5 class="mb-0" style="color: white;">Gender Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="genderChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2 -->
+    <div class="row">
+        <!-- Registration Trend -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #f0a200; color: white;">
+                    <h5 class="mb-0" style="color: white;">User Registration Trend</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="registrationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Hours -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #143454; color: white;">
+                    <h5 class="mb-0" style="color: white;">Most Active Hours</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activeHoursChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Color palette
+    const colors = {
+        darkBlue: '#09619f',
+        orange: '#f0a200',
+        veryDarkBlue: '#143454',
+        lightGray: '#e2e2e2'
+    };
+
+    // Common chart options
+    const commonOptions = {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#143454'  // Dark blue for legend text
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { 
+                    stepSize: 1,
+                    color: '#143454'  // Dark blue for y-axis text
+                },
+                grid: {
+                    color: '#e2e2e2'  // Light gray for grid lines
+                }
+            },
+            x: {
+                ticks: { 
+                    color: '#143454'  // Dark blue for x-axis text
+                },
+                grid: {
+                    color: '#e2e2e2'  // Light gray for grid lines
+                }
+            }
+        }
+    };
+
+    // Daily Posts Chart
+    const postsCtx = document.getElementById('postsChart').getContext('2d');
+    new Chart(postsCtx, {
+        type: 'line',
+        data: {
+            labels: {{ daily_posts|map(attribute='date')|list|tojson }},
+            datasets: [{
+                label: 'Number of Posts',
+                data: {{ daily_posts|map(attribute='count')|list|tojson }},
+                borderColor: colors.orange,
+                backgroundColor: colors.orange + '20',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: commonOptions
+    });
+
+    // Gender Distribution Chart
+    const genderCtx = document.getElementById('genderChart').getContext('2d');
+    new Chart(genderCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ gender_stats|map(attribute='gender')|list|tojson }},
+            datasets: [{
+                data: {{ gender_stats|map(attribute='count')|list|tojson }},
+                backgroundColor: [colors.darkBlue, colors.orange, colors.veryDarkBlue, colors.lightGray]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: '#143454'  // Dark blue for legend text
+                    }
+                }
+            }
+        }
+    });
+
+    // Registration Trend Chart
+    const registrationCtx = document.getElementById('registrationChart').getContext('2d');
+    const registrationData = {{ registration_trend|tojson }};
+    const formattedDates = registrationData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    });
+    
+    new Chart(registrationCtx, {
+        type: 'line',
+        data: {
+            labels: formattedDates,
+            datasets: [{
+                label: 'New Users',
+                data: {{ registration_trend|map(attribute='count')|list|tojson }},
+                borderColor: colors.darkBlue,
+                backgroundColor: colors.darkBlue + '20',
+                tension: 0.1,
+                fill: true
+            }]
+        },
+        options: commonOptions
+    });
+
+    // Active Hours Chart
+    const activeHoursCtx = document.getElementById('activeHoursChart').getContext('2d');
+    new Chart(activeHoursCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ active_hours|map(attribute='hour')|list|tojson }},
+            datasets: [{
+                label: 'Posts',
+                data: {{ active_hours|map(attribute='count')|list|tojson }},
+                backgroundColor: colors.orange,
+                borderColor: colors.veryDarkBlue,
+                borderWidth: 1
+            }]
+        },
+        options: commonOptions
+    });
+});
+</script>
+{% endblock %} 

@@ -1,6 +1,6 @@
-from flask_socketio import emit
+from flask_socketio import emit, join_room
 from flask_login import current_user
-from app import socketio, db
+from .extensions import socketio, db
 from datetime import datetime
 from .models import Notification
 

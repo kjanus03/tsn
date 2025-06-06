@@ -46,9 +46,7 @@
                     <hr class="my-4">
 
                     <div class="text-center">
-                        {% if security.recoverable %}
-                            <p class="mb-2"><a href="{{ url_for_security('forgot_password') }}">Forgot Your Password?</a></p>
-                        {% endif %}
+                        <p class="mb-2"><a href="{{ url_for_security('forgot_password') }}" class="text-decoration-none">Forgot Your Password?</a></p>
                         {% if security.registerable %}
                             <p>Don't have an account? <a href="{{ url_for_security('register') }}">Sign Up</a></p>
                         {% endif %}

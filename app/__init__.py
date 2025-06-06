@@ -2,7 +2,7 @@
 import os
 from flask import Flask, template_rendered, request
 from flask_security import SQLAlchemyUserDatastore
-from .extensions import db, migrate, socketio, security, csrf  # security is an empty Security() instance
+from .extensions import db, migrate, socketio, security, csrf, mail, login_manager
 from .config import Config
 
 # ---> IMPORT YOUR CUSTOM FORM CLASS DIRECTLY <---
@@ -26,6 +26,14 @@ def create_app(config_class=Config):
     migrate.init_app(app, db)
     socketio.init_app(app)
     csrf.init_app(app)
+    login_manager.init_app(app)
+    
+    # Configure mail with debug
+    mail.init_app(app)
+    if app.debug:
+        import logging
+        logging.basicConfig()
+        logging.getLogger('flask_mail').setLevel(logging.DEBUG)
 
     # --- SIGNAL HANDLER ---
     @template_rendered.connect_via(app)
@@ -46,11 +54,22 @@ def create_app(config_class=Config):
     # --- THIS IS THE MOST IMPORTANT PART FOR CUSTOM FORM ---
     # Explicitly set the FORM CLASS OBJECT in app.config
     app.config['SECURITY_REGISTER_FORM'] = ExtendedRegisterForm # Assign the imported class
+    
+    # Explicitly set the password reset templates
+    app.config['SECURITY_FORGOT_PASSWORD_TEMPLATE'] = 'security/forgot_password.html'
+    app.config['SECURITY_RESET_PASSWORD_TEMPLATE'] = 'security/reset_password.html'
+    app.config['SECURITY_RECOVERABLE'] = True
     # -------------------------------------------------------
 
     # Add a debug print IMMEDIATELY AFTER loading config
     print(
         f"DEBUG: Value of SECURITY_REGISTER_TEMPLATE from app.config AFTER from_object: {app.config.get('SECURITY_REGISTER_TEMPLATE')}")
+    print(
+        f"DEBUG: Value of SECURITY_FORGOT_PASSWORD_TEMPLATE from app.config: {app.config.get('SECURITY_FORGOT_PASSWORD_TEMPLATE')}")
+    print(
+        f"DEBUG: Value of SECURITY_RESET_PASSWORD_TEMPLATE from app.config: {app.config.get('SECURITY_RESET_PASSWORD_TEMPLATE')}")
+    print(
+        f"DEBUG: Value of SECURITY_RECOVERABLE from app.config: {app.config.get('SECURITY_RECOVERABLE')}")
 
     with app.app_context():
         from .models import User, Role
@@ -60,6 +79,11 @@ def create_app(config_class=Config):
     # Initialize Flask-Security. It will now read SECURITY_REGISTER_FORM from app.config
     # and should see your ExtendedRegisterForm class object.
     security.init_app(app, user_datastore)
+
+    # Create admin role if it doesn't exist
+    with app.app_context():
+        admin_role = user_datastore.find_or_create_role('admin', description='Administrator')
+        db.session.commit()
 
     # --- REVISED DEBUG PRINTS ---
     print(f"--- AFTER SECURITY INIT - REVISED DIVE ---")
@@ -101,7 +125,7 @@ def create_app(config_class=Config):
 
     print(f"--- END AFTER SECURITY INIT - REVISED DIVE ---")
 
-    # ... (Blueprints, main route, etc.) ...
+    # Register blueprints
     from .main.routes import bp as main_bp
     app.register_blueprint(main_bp)
 
@@ -110,6 +134,12 @@ def create_app(config_class=Config):
 
     from .connections.routes import bp as connections_bp
     app.register_blueprint(connections_bp)
+
+    from .admin.routes import admin_bp
+    app.register_blueprint(admin_bp)
+
+    from .event.routes import events_bp as events_bp
+    app.register_blueprint(events_bp)
 
     from .sockets import init_socketio_events
     init_socketio_events(socketio)

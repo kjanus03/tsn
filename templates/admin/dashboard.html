@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Admin Dashboard</h1>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header" style="background-color: #143454; color: white;">
+                    <h5 class="mb-0" style="color: white;">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{{ url_for('admin.user_management') }}" class="btn" style="background-color: #09619f; color: white;">Manage Users</a>
+                    <a href="{{ url_for('admin.statistics') }}" class="btn" style="background-color: #f0a200; color: white;">View Statistics</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card" style="background-color: #09619f; color: white;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: white;">Total Users</h5>
+                    <h2 class="card-text" style="color: white;">{{ total_users }}</h2>
+                    <p class="card-text" style="color: white;">+{{ new_users }} new this week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background-color: #f0a200;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #143454;">Total Posts</h5>
+                    <h2 class="card-text" style="color: #143454;">{{ total_posts }}</h2>
+                    <p class="card-text" style="color: #143454;">+{{ new_posts }} new this week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background-color: #143454; color: white;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: white;">Total Comments</h5>
+                    <h2 class="card-text" style="color: white;">{{ total_comments }}</h2>
+                    <p class="card-text" style="color: white;">+{{ new_comments }} new this week</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card" style="background-color: #e2e2e2;">
+                <div class="card-body">
+                    <h5 class="card-title" style="color: #143454;">Total Likes</h5>
+                    <h2 class="card-text" style="color: #143454;">{{ total_likes }}</h2>
+                    <p class="card-text" style="color: #143454;">+{{ new_likes }} new this week</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Most Active Users -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #09619f; color: white;">
+                    <h5 class="mb-0" style="color: white;">Most Active Users</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for user in active_users %}
+                        <a href="{{ url_for('profile.view_profile', username=user.username) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ user.username }}</h6>
+                                <small>{{ user.posts.count() }} posts</small>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header" style="background-color: #f0a200; color: white;">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for post in recent_posts %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ post.author.username }}</h6>
+                                <small>{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-1">{{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %} 
